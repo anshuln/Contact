@@ -1,0 +1,21 @@
+{
+  
+  "name": "contact",
+  "version": "1.0.0",
+  "description": "online version of the multiplayer game",
+  "scripts": {
+    
+    "start": "nodemon app"
+   },
+  "keywords": [
+    "contact"
+  ],
+  "author": "Anshul Nasery",
+  "license": "ISC",
+  "dependencies": {
+    "ejs": "^2.6.1",
+    "express": "^4.16.3",
+    "nodemon": "^1.18.4",
+    "socket.io": "^2.1.1"
+  }
+}

@@ -67,6 +67,7 @@ var curr_guess="";
 var word_giver="";
 var clues=[];
 var clue_number=[];
+var clue_correct=[];
 var curr_words=[];
 //listen on every connection
 io.on('connection', (socket) => {
@@ -84,16 +85,17 @@ io.on('connection', (socket) => {
     socket.on('new_message', (data) => {
         //broadcast the new message
         var string=data.message;
-        if(string.slice(0,4).toLowerCase()==="word"){		//TODO - Word Validation
+        if(string.slice(0,5).toLowerCase()==="word "){		//TODO - Word Validation
         	if(word.length==0){
         		word=String(data.message).toUpperCase().slice(5).split(" ")[0];
         		curr_guess=word.slice(0,1);
-        		var msg="A new word has been given by "+data.username;
+        		var msg="A new word has been given by "+socket.username;
         		io.sockets.emit('new_message', {message : msg, username : "master"});
         		io.sockets.emit('guess',{guess : curr_guess})
         		word_giver=data.username;
         		clues=[];
         		clue_number=[];
+        		clue_correct=[];
         	}
         	else{
         		var msg="A Word is already in play";
@@ -101,8 +103,8 @@ io.on('connection', (socket) => {
         	}
         	// io.sockets.emit('new_message', {message : data.message, username : socket.username});	
         }
-        if(string.slice(0,4).toLowerCase()==="clue"){
-        	if(word.length==0){
+        if(string.slice(0,5).toLowerCase()==="clue "){
+        	if(word.length==0){			//TODO check if word is in clue or not.
         		var msg="No Words currently, "+data.username;
         		io.sockets.emit('new_message', {message : msg, username : "master"});
         	}
@@ -118,7 +120,7 @@ io.on('connection', (socket) => {
 	        		clue_number.push(0);
 	        		curr_words.push(curr_word);
 	        		var msg="CLUE: "+c;
-	        		io.sockets.emit('new_message', {message : msg, username : data.username});
+	        		io.sockets.emit('new_message', {message : msg, username : socket.username});
 	        		io.sockets.emit('clue',{clue : c,number : 0})
         		}
         		else{
@@ -126,6 +128,7 @@ io.on('connection', (socket) => {
         		}
         	}
         }
+        
         // io.sockets.emit('new_message', {message : data.message, username : socket.username});
     })
 

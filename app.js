@@ -63,10 +63,11 @@ server = app.listen(3000)
 //socket.io instantiation
 const io = require("socket.io")(server)
 var word="";
-var guesses="";
+var curr_guess="";
 var word_giver="";
 var clues=[];
 var clue_number=[];
+var curr_words=[];
 //listen on every connection
 io.on('connection', (socket) => {
 	console.log('New user connected')
@@ -86,11 +87,10 @@ io.on('connection', (socket) => {
         if(string.slice(0,4).toLowerCase()==="word"){		//TODO - Word Validation
         	if(word.length==0){
         		word=String(data.message).toUpperCase().slice(5).split(" ")[0];
-        		guessed=word.slice(0,1);
-        		var msg="A new word has been given by "
-        		msg.concat(data.username);
+        		curr_guess=word.slice(0,1);
+        		var msg="A new word has been given by "+data.username;
         		io.sockets.emit('new_message', {message : msg, username : "master"});
-        		io.sockets.emit('guess',{guess : guessed})
+        		io.sockets.emit('guess',{guess : curr_guess})
         		word_giver=data.username;
         		clues=[];
         		clue_number=[];
@@ -103,18 +103,27 @@ io.on('connection', (socket) => {
         }
         if(string.slice(0,4).toLowerCase()==="clue"){
         	if(word.length==0){
-        		var msg="No Words currently, ";
-        		msg=msg.concat(data.username);
+        		var msg="No Words currently, "+data.username;
         		io.sockets.emit('new_message', {message : msg, username : "master"});
         	}
         	else{
         		var c=String(data.message).toUpperCase().slice(5);
-        		clues.push(c);
-        		clue_number.push(0);
-        		var msg="CLUE: ";
-        		msg.concat(c);
-        		io.sockets.emit('new_message', {message : c, username : data.username});
-        		io.sockets.emit('clue',{clue : c,number : 0})
+        		var pos = c.indexOf("WORD");	//TODO if no word
+        		var cop=c;
+        		var curr_word=cop.slice(pos+5);
+        		c=c.substring(0,pos);
+        		if(curr_word.indexOf(curr_guess)==0){
+        			//TODO Search whether already in list of clues
+	        		clues.push(c);
+	        		clue_number.push(0);
+	        		curr_words.push(curr_word);
+	        		var msg="CLUE: "+c;
+	        		io.sockets.emit('new_message', {message : msg, username : data.username});
+	        		io.sockets.emit('clue',{clue : c,number : 0})
+        		}
+        		else{
+        			//TODO - Private Messaging
+        		}
         	}
         }
         // io.sockets.emit('new_message', {message : data.message, username : socket.username});

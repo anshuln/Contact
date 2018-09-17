@@ -64,6 +64,7 @@ server = app.listen(3000)
 const io = require("socket.io")(server)
 var word="";
 var guesses="";
+var word_giver="";
 
 //listen on every connection
 io.on('connection', (socket) => {
@@ -88,6 +89,7 @@ io.on('connection', (socket) => {
         		var msg="A new word has been given"
         		io.sockets.emit('new_message', {message : word, username : "master"});
         		io.sockets.emit('guess',{guess : guessed})
+        		word_giver=data.username;
         	}
         	else{
         		var msg="A Word is already in play";

@@ -62,7 +62,8 @@ server = app.listen(3000)
 
 //socket.io instantiation
 const io = require("socket.io")(server)
-
+var word="";
+var guesses="";
 
 //listen on every connection
 io.on('connection', (socket) => {
@@ -79,7 +80,22 @@ io.on('connection', (socket) => {
     //listen on new_message
     socket.on('new_message', (data) => {
         //broadcast the new message
-        io.sockets.emit('new_message', {message : data.message, username : socket.username});
+        var string=data.message;
+        if(string.slice(0,4).toLowerCase()==="word"){
+        	if(word.length==0){
+        		word=String(data.message).toUpperCase().slice(5).split(" ")[0];
+        		guessed=word.slice(0,1);
+        		var msg="A new word has been given"
+        		io.sockets.emit('new_message', {message : word, username : "master"});
+        		io.sockets.emit('guess',{guess : guessed})
+        	}
+        	else{
+        		var msg="A Word is already in play";
+        		io.sockets.emit('new_message', {message : msg, username : "master"});
+        	}
+        	// io.sockets.emit('new_message', {message : data.message, username : socket.username});	
+        }
+        // io.sockets.emit('new_message', {message : data.message, username : socket.username});
     })
 
     // //listen on typing

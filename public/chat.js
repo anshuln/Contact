@@ -42,6 +42,7 @@ $(function(){
 	var send_username = $("#send_username")
 	var chatroom = $("#chatroom")
 	var feedback = $("#feedback")
+	var guess = $("#till_now")
 	$("#main_page").hide();
 	//Emit message
 	send_message.click(function(){
@@ -54,7 +55,9 @@ $(function(){
 		message.val('');
 		chatroom.append("<p class='message'>" + data.username + ": " + data.message + "</p>")
 	})
-
+	socket.on("guess", (data) => {
+		document.getElementById("till_now").innerHTML=data.guess;
+	})
 	//Emit a username
 	send_username.click(function(){
 		socket.emit('change_username', {username : username.val()})

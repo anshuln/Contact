@@ -65,7 +65,8 @@ const io = require("socket.io")(server)
 var word="";
 var guesses="";
 var word_giver="";
-
+var clues=[];
+var clue_number=[];
 //listen on every connection
 io.on('connection', (socket) => {
 	console.log('New user connected')
@@ -82,20 +83,39 @@ io.on('connection', (socket) => {
     socket.on('new_message', (data) => {
         //broadcast the new message
         var string=data.message;
-        if(string.slice(0,4).toLowerCase()==="word"){
+        if(string.slice(0,4).toLowerCase()==="word"){		//TODO - Word Validation
         	if(word.length==0){
         		word=String(data.message).toUpperCase().slice(5).split(" ")[0];
         		guessed=word.slice(0,1);
-        		var msg="A new word has been given"
-        		io.sockets.emit('new_message', {message : word, username : "master"});
+        		var msg="A new word has been given by "
+        		msg.concat(data.username);
+        		io.sockets.emit('new_message', {message : msg, username : "master"});
         		io.sockets.emit('guess',{guess : guessed})
         		word_giver=data.username;
+        		clues=[];
+        		clue_number=[];
         	}
         	else{
         		var msg="A Word is already in play";
         		io.sockets.emit('new_message', {message : msg, username : "master"});
         	}
         	// io.sockets.emit('new_message', {message : data.message, username : socket.username});	
+        }
+        if(string.slice(0,4).toLowerCase()==="clue"){
+        	if(word.length==0){
+        		var msg="No Words currently, ";
+        		msg=msg.concat(data.username);
+        		io.sockets.emit('new_message', {message : msg, username : "master"});
+        	}
+        	else{
+        		var c=String(data.message).toUpperCase().slice(5);
+        		clues.push(c);
+        		clue_number.push(0);
+        		var msg="CLUE: ";
+        		msg.concat(c);
+        		io.sockets.emit('new_message', {message : c, username : data.username});
+        		io.sockets.emit('clue',{clue : c,number : 0})
+        	}
         }
         // io.sockets.emit('new_message', {message : data.message, username : socket.username});
     })

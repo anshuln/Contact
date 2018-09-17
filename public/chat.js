@@ -43,6 +43,7 @@ $(function(){
 	var chatroom = $("#chatroom")
 	var feedback = $("#feedback")
 	var guess = $("#till_now")
+	var clues = $("#clues")
 	$("#main_page").hide();
 	//Emit message
 	send_message.click(function(){
@@ -54,10 +55,15 @@ $(function(){
 		feedback.html('');
 		message.val('');
 		chatroom.append("<p class='message'>" + data.username + ": " + data.message + "</p>")
+
 	})
 	socket.on("guess", (data) => {
 		document.getElementById("till_now").innerHTML=data.guess;
+		document.getElementById("clues").innerHTML="";
 	})
+	socket.on("clue", (data) => {
+		clues.append("<li>"+data.clue+" : "+String(data.number)+"</li>");
+	})	
 	//Emit a username
 	send_username.click(function(){
 		socket.emit('change_username', {username : username.val()})

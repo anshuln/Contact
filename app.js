@@ -68,7 +68,13 @@ var word_giver="";
 var clues=[];
 var clue_number=[];
 var clue_correct=[];
+var clue_people=[];
+var min_people=3;
 var curr_words=[];
+var contact_flag=0;
+var curr_index=0;
+var contact_time;
+new Date();
 //listen on every connection
 io.on('connection', (socket) => {
 	console.log('New user connected')
@@ -88,14 +94,18 @@ io.on('connection', (socket) => {
         if(string.slice(0,5).toLowerCase()==="word "){		//TODO - Word Validation
         	if(word.length==0){
         		word=String(data.message).toUpperCase().slice(5).split(" ")[0];
-        		curr_guess=word.slice(0,1);
+        		curr_guess=1;
         		var msg="A new word has been given by "+socket.username;
+        		word_giver=socket.username;
         		io.sockets.emit('new_message', {message : msg, username : "master"});
-        		io.sockets.emit('guess',{guess : curr_guess})
+        		io.sockets.emit('guess',{guess : word.slice(0,curr_guess)})
         		word_giver=data.username;
         		clues=[];
         		clue_number=[];
+        		curr_words=[];
         		clue_correct=[];
+        		curr_index=0;
+        		contact_flag=0;
         	}
         	else{
         		var msg="A Word is already in play";
@@ -118,6 +128,9 @@ io.on('connection', (socket) => {
         			//TODO Search whether already in list of clues
 	        		clues.push(c);
 	        		clue_number.push(0);
+	        		clue_correct.push(0);
+	        		var temp=[];
+	        		clue_people.push(temp);
 	        		curr_words.push(curr_word);
 	        		var msg="CLUE: "+c;
 	        		io.sockets.emit('new_message', {message : msg, username : socket.username});
@@ -128,12 +141,68 @@ io.on('connection', (socket) => {
         		}
         	}
         }
-        
+        if(string.slice(0,8).toLowerCase()==="contact "){
+        	var index=parseInt(string.slice(8,9))-1;
+        	if(clue_people[index].indexOf(socket.username) == -1){	//To ensure you contact only once on a clue
+        		clue_people[index].push(socket.username);
+        		clue_number[index]+=1;
+        		//TODO- if word correct (Timer etc), if number more than contact, printing stuff,
+        		var c=String(data.message).toUpperCase().slice(9);	//Check once whether indexing is correct
+        		curr_guess=c.split(" ")[0];
+        		if(curr_guess === curr_words[index]){
+        			clue_correct[index]+=1;	
+        		}
+        		if(clue_number[index]==min_people){
+        			curr_index=index;
+        			contact_flag=1;
+        			
+        			contact_time=Date.now();
+        			io.sockets.emit('contact',{clue:clues[index],player:word_giver,time:contact_time})
+        		}
+
+        	}
+        }
+        if(string.slice(0,1).toLowerCase()==="/"){	//Comments
+
+        }
+        else{			//Word giver guessing
+        	if(data.username === word_giver){
+        		if(Date.now()-contact_time < 11000){
+        			if(data.message.toUpperCase().split(" ")[0] === clue_correct[curr_index]){
+        				contact_flag=0;
+        				io.sockets.emit('correct',{word:data.message,username:data.username});
+        			}
+        			else{
+        				io.sockets.emit('incorrect',{word:data.message,username:data.username});	
+        			}
+        		}
+        	}
+        }
         // io.sockets.emit('new_message', {message : data.message, username : socket.username});
     })
+
 
     // //listen on typing
     // socket.on('typing', (data) => {
     // 	socket.broadcast.emit('typing', {username : socket.username})
     // })
 })
+if(Date.now()-contact_time > 11000 && contact_flag == 1 && clue_correct[curr_index] == clue_people[curr_index]){
+		clues=[];
+		clue_number=[];
+		curr_words=[];
+		clue_correct=[];
+		curr_index=0;
+		contact_flag=0;
+		curr_guess+=1;
+		io.sockets.emit('guess',{guess : word.slice(0,curr_guess)});
+}
+else if (Date.now()-contact_time > 11000 && contact_flag == 1 && clue_correct[curr_index] < clue_people[curr_index]){
+		clues=[];
+		clue_number=[];
+		curr_words=[];
+		clue_correct=[];
+		curr_index=0;
+		contact_flag=0;
+		//TODO - kataane ka message
+}
